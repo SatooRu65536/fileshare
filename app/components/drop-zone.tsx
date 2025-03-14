@@ -1,8 +1,9 @@
-import { forwardRef, HTMLProps, useCallback, useImperativeHandle } from "react";
+import classNames from "classnames";
+import { forwardRef, HTMLProps, useImperativeHandle } from "react";
 import { useDropzone } from "react-dropzone";
 
 interface Props extends HTMLProps<HTMLDivElement> {
-  onFileDrop: (files: File[]) => void;
+  onFileDrop?: (files: File[]) => void;
 }
 
 export interface FileDropzoneRef {
@@ -10,10 +11,12 @@ export interface FileDropzoneRef {
 }
 
 export const FileDropzone = forwardRef(
-  ({ children, onFileDrop, ...props }: Props, ref) => {
-    const { getRootProps, getInputProps, open, isDragActive } = useDropzone({
-      onDrop: onFileDrop,
-    });
+  ({ children, className, onFileDrop, ...props }: Props, ref) => {
+    const { getRootProps, getInputProps, open, acceptedFiles, isDragActive } =
+      useDropzone({
+        onDrop: onFileDrop,
+        multiple: false,
+      });
 
     useImperativeHandle(
       ref,
@@ -24,9 +27,25 @@ export const FileDropzone = forwardRef(
     );
 
     return (
-      <div {...getRootProps()} onClick={undefined}>
-        <input {...getInputProps()} />
-        {isDragActive ? <p>Drop the files here ...</p> : children}
+      <div
+        {...getRootProps()}
+        onClick={undefined}
+        {...props}
+        className={classNames(className, "relative")}
+      >
+        <input name="file" {...getInputProps()} />
+        <input
+          name="name"
+          type="hidden"
+          value={acceptedFiles?.[0]?.name ?? ""}
+        />
+
+        {isDragActive && (
+          <p className="absolute inset-0 m-auto inline-block w-fit h-fit">
+            Drop the files here ...
+          </p>
+        )}
+        <div style={{ opacity: isDragActive ? 0 : 1 }}>{children}</div>
       </div>
     );
   },

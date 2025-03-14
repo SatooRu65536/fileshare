@@ -4,9 +4,9 @@ import {
 } from "@remix-run/dev";
 import { defineConfig } from "vite";
 import tsconfigPaths from "vite-tsconfig-paths";
-import type { PlatformProxy } from 'wrangler';
+import type { PlatformProxy } from "wrangler";
 
-type Cloudflare = Omit<PlatformProxy<Env>, 'dispose'>;
+type Cloudflare = Omit<PlatformProxy<Env>, "dispose">;
 
 declare module "@remix-run/cloudflare" {
   interface Future {

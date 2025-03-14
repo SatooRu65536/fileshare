@@ -1,13 +1,13 @@
-import { ListObjectsV2Command } from "@aws-sdk/client-s3";
-import type {
-  AppLoadContext,
-  HeadersFunction,
-  LoaderFunctionArgs,
-  MetaFunction,
+import {
+  unstable_createMemoryUploadHandler as createMemoryUploadHandler,
+  unstable_parseMultipartFormData as parseMultipartFormData,
+  type ActionFunctionArgs,
+  type HeadersFunction,
+  type LoaderFunctionArgs,
+  type MetaFunction,
 } from "@remix-run/cloudflare";
-import { useLoaderData, useRouteError } from "@remix-run/react";
+import { Form, useLoaderData, useRouteError } from "@remix-run/react";
 import { FileMetadata } from "~/types";
-import { getS3Client } from "~/lib/s3";
 import { DataTable } from "~/components/data-table";
 import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "~/components/ui/button";
@@ -15,39 +15,7 @@ import { Trash2, Upload } from "lucide-react";
 import { FileDropzone, FileDropzoneRef } from "~/components/drop-zone";
 import { useCallback, useRef } from "react";
 
-export const meta: MetaFunction = () => {
-  return [
-    { title: "SatooRu's Files" },
-    { name: "description", content: "SatooRu のファイル共有サービス!" },
-  ];
-};
-
-export const headers: HeadersFunction = () => ({
-  "WWW-Authenticate": "Basic",
-});
-
-const isAuthorized = (request: Request, context: AppLoadContext) => {
-  const header = request.headers.get("Authorization");
-
-  if (!header) return false;
-
-  const base64 = header.replace("Basic ", "");
-  const [username, password] = Buffer.from(base64, "base64")
-    .toString()
-    .split(":");
-
-  // 環境変数などでIDとパスワードを渡す
-  if (username !== context.cloudflare.env.BASIC_AUTH_USERNAME) return false;
-  if (password !== context.cloudflare.env.BASIC_AUTH_PASSWORD) return false;
-
-  return true;
-};
-
 export const loader = async ({ request, context }: LoaderFunctionArgs) => {
-  if (!isAuthorized(request, context)) {
-    throw new Response("Unauthorized", { status: 401 });
-  }
-
   const { objects } = await context.cloudflare.env.R2.list();
 
   const files: FileMetadata[] =
@@ -135,15 +103,18 @@ export const columns: ColumnDef<FileMetadata>[] = [
 ];
 export default function Index() {
   const { files } = useLoaderData<typeof loader>();
+  const formRef = useRef<HTMLFormElement>(null);
   const dropzoneRef = useRef<FileDropzoneRef>(null);
 
   const dropZoneOpen = useCallback(() => dropzoneRef.current?.open(), []);
-  const onFileDrop = useCallback((files: File[]) => {
-    console.log(files);
+  const onFileDrop = useCallback(() => {
+    setInterval(() => {
+      formRef.current?.submit();
+    }, 100);
   }, []);
 
   return (
-    <FileDropzone ref={dropzoneRef} onFileDrop={onFileDrop}>
+    <Form action="/" method="POST" encType="multipart/form-data" ref={formRef}>
       <div className="flex justify-between items-center">
         <h2 className="font-bold text-xl py-2">ファイル一覧</h2>
         <Button onClick={dropZoneOpen} size="icon">
@@ -151,10 +122,12 @@ export default function Index() {
         </Button>
       </div>
 
-      <div className="rounded-md border">
-        <DataTable className="border" columns={columns} data={files} />
-      </div>
-    </FileDropzone>
+      <FileDropzone ref={dropzoneRef} onFileDrop={onFileDrop}>
+        <div className="rounded-md border">
+          <DataTable className="border" columns={columns} data={files} />
+        </div>
+      </FileDropzone>
+    </Form>
   );
 }
 
