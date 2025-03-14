@@ -1,11 +1,4 @@
-import {
-  unstable_createMemoryUploadHandler as createMemoryUploadHandler,
-  unstable_parseMultipartFormData as parseMultipartFormData,
-  type ActionFunctionArgs,
-  type HeadersFunction,
-  type LoaderFunctionArgs,
-  type MetaFunction,
-} from "@remix-run/cloudflare";
+import { type LoaderFunctionArgs } from "@remix-run/cloudflare";
 import { Form, useLoaderData, useRouteError } from "@remix-run/react";
 import { FileMetadata } from "~/types";
 import { DataTable } from "~/components/data-table";
@@ -15,7 +8,7 @@ import { Trash2, Upload } from "lucide-react";
 import { FileDropzone, FileDropzoneRef } from "~/components/drop-zone";
 import { useCallback, useRef } from "react";
 
-export const loader = async ({ request, context }: LoaderFunctionArgs) => {
+export const loader = async ({ context }: LoaderFunctionArgs) => {
   const { objects } = await context.cloudflare.env.R2.list();
 
   const files: FileMetadata[] =
