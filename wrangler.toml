@@ -1,0 +1,8 @@
+#:schema node_modules/wrangler/config-schema.json
+name = "fileshare"
+compatibility_date = "2025-03-14"
+pages_build_output_dir = "./build/client"
+
+[[r2_buckets]]
+binding = "R2"
+bucket_name = "fileshare"
