@@ -37,7 +37,12 @@ export const FileDropzone = forwardRef(
         <input
           name="name"
           type="hidden"
-          value={acceptedFiles?.[0]?.name ?? ""}
+          value={acceptedFiles.at(0)?.name ?? ""}
+        />
+        <input
+          name="type"
+          type="hidden"
+          value={acceptedFiles.at(0)?.type ?? ""}
         />
 
         {isDragActive && (

@@ -13,7 +13,6 @@ import {
   type LinksFunction,
 } from "@remix-run/cloudflare";
 import "./tailwind.css";
-import fs from "fs";
 
 export const meta: MetaFunction = () => {
   return [
@@ -45,12 +44,13 @@ export const action = async ({ request, context }: ActionFunctionArgs) => {
   const formData = await parseMultipartFormData(request, uploadHandler);
   const file = formData.get("file") as File | null;
   const name = formData.get("name") as string | null;
+  const type = formData.get("type") as string | null;
 
   if (file === null) return new Response("No file found", { status: 400 });
   if (name === null) return new Response("No name found", { status: 400 });
 
   context.cloudflare.env.R2.put(name, await file.arrayBuffer(), {
-    httpMetadata: { contentType: file.type },
+    httpMetadata: { contentType: type ?? undefined },
   });
 
   return new Response("OK", { status: 200 });
